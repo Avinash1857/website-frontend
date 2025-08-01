@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>User Dashboard</title>
+</head>
+<body>
+  <h1>Welcome!</h1>
+  <p id="userGreeting"></p>
+
+  <h2>Login/Logout History</h2>
+  <ul id="historyList"></ul>
+
+  <script>
+    const username = sessionStorage.getItem("username");
+    const greeting = document.getElementById("userGreeting");
+    const historyList = document.getElementById("historyList");
+
+    if (!username) {
+      document.body.innerHTML = "<h2>You are not logged in.</h2>";
+    } else {
+      greeting.innerText = `Logged in as ${username}`;
+
+      // Fetch user's history
+      fetch("https://website-backend-dm6y.onrender.com/history?username=" + username)
+        .then(res => res.json())
+        .then(data => {
+          data.history.forEach(item => {
+            const li = document.createElement("li");
+            li.innerText = `${item.event.toUpperCase()} at ${new Date(item.timestamp).toLocaleString()}`;
+            historyList.appendChild(li);
+          });
+        });
+    }
+
+    // Auto logout on tab close
+    window.addEventListener("beforeunload", async () => {
+      if (username) {
+        await fetch("https://website-backend-dm6y.onrender.com/logout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username }),
+        });
+        sessionStorage.removeItem("username");
+      }
+    });
+  </script>
+</body>
+</html>
